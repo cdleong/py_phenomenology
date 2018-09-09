@@ -5,6 +5,9 @@ Created on Sep 3, 2018
 
 
 
+
+
+
 '''
 import logging
 import csv
@@ -20,6 +23,7 @@ FIRST_RADIATION_CONSTANT = decimal.Decimal(3.742*10.0**8)  # W*um^4*m^-2
 SECOND_RADIATION_CONSTANT = decimal.Decimal(1.438*10.0**4)  # um*K
 SPEED_OF_LIGHT_MICRONS_PER_SECOND =  decimal.Decimal(3.0*10.0**8*10.0**6) # speed of light in micrometers per second
 PLANCK_CONSTANT = decimal.Decimal(6.63*10.0**-34) # J *S
+STEFAN_BOLTZMANN_CONSTANT = decimal.Decimal(5.67*10**-8)
 
 class GraybodyEmissivityCalculator(object):
     '''
@@ -116,6 +120,14 @@ class GraybodyEmissivityCalculator(object):
             
         return blackbody_exitances, graybody_exitances, wavelengths_um, ratios
 
+    def calculate_total_power_across_all_wavelengths_for_temp_if_blackbody(self, temp_kelvin):
+        return STEFAN_BOLTZMANN_CONSTANT*temp_kelvin**4
+
+    def calculate_total_power_across_all_wavelengths_for_temp_if_constant_emissivity(self, temp_kelvin):
+        blackbody_power = self.calculate_total_power_across_all_wavelengths_for_temp_if_blackbody(temp_kelvin)
+        actual_power = blackbody_power*self.constant_emissivity
+        return actual_power
+            
     def numerically_integrate_curve(self, x_y_pairs):
         for x_y_pair in x_y_pairs:
             pass # TODO
@@ -147,6 +159,14 @@ def graph_ratios(wavelengths, ratios, temp_kelvin):
     plt.xlabel('wavelength (um)')
     plt.ylabel('actual/blackbody')    
     
+
+def graph_power_vs_temp(temps_kelvin, powers_for_temps):
+# Graph it
+    plt.figure()
+    plt.title(f"Total Power for each T:")
+    plt.scatter(temps_kelvin, powers_for_temps)
+    plt.xlabel('Temp (Kelvin)')
+    plt.ylabel('Power (W*m^-2)')    
       
 def iii_10(my_gec):
 
@@ -205,20 +225,21 @@ def do_c_III_1(my_gec):
                         
     plt.show()
     
-if __name__ == '__main__':
-    my_gec = GraybodyEmissivityCalculator()
-#     my_gec.set_emissivity_from_csv("../data/evansite_emissivity.csv")
-    my_gec.set_constant_emissivity(0.7)
+
+def calculate_and_graph_total_power_for_temp_range(my_gec, start_temp_kelvin, stop_temp_kelvin, temp_step_kelvin):
+    temps_kelvin = range(start_temp_kelvin, stop_temp_kelvin, temp_step_kelvin)
+    powers_for_temps = []
+    for cand_temp_kelvin in temps_kelvin:
+        power_for_temp = my_gec.calculate_total_power_across_all_wavelengths_for_temp_if_constant_emissivity(cand_temp_kelvin)
+        powers_for_temps.append(power_for_temp)
     
-    
-    start_wavelength_um = decimal.Decimal(4)
-    stop_wavelength_um = decimal.Decimal(15)
-    wavelength_step_um = decimal.Decimal(0.001)
-    temp_kelvin = decimal.Decimal(300)
+    graph_power_vs_temp(temps_kelvin, powers_for_temps)
+
+def get_blackbody_and_graybody_and_ratios_and_graph_them(my_gec, start_wavelength_um, stop_wavelength_um, wavelength_step_um, temp_kelvin):
+
     blackbody_exitances = []
     graybody_exitances = []
-    wavelengths = np.arange(start_wavelength_um, stop_wavelength_um, wavelength_step_um)
-    constant_emissivity = decimal.Decimal(0.7)
+    wavelengths = np.arange(start_wavelength_um, stop_wavelength_um, wavelength_step_um)    
     
     for wavelength_um in wavelengths:
         bbody_exitance = my_gec.calculate_blackbody_exitance_at_temp_and_wavelength(wavelength_um, temp_kelvin)
@@ -230,7 +251,7 @@ if __name__ == '__main__':
     
     
     ratios = []
-    for index, value in enumerate(wavelengths):
+    for index, _ in enumerate(wavelengths):
         ratio = graybody_exitances[index]/blackbody_exitances[index]
         ratios.append(ratio)
     
@@ -239,10 +260,27 @@ if __name__ == '__main__':
     
     graph_wave_black_gray_for_temp(wavelengths, blackbody_exitances, graybody_exitances, temp_kelvin)
     
-    graph_ratios(wavelengths, ratios, temp_kelvin)
+    graph_ratios(wavelengths, ratios, temp_kelvin)    
+    
+if __name__ == '__main__':
+    my_gec = GraybodyEmissivityCalculator()
+#     my_gec.set_emissivity_from_csv("../data/evansite_emissivity.csv")
+    my_gec.set_constant_emissivity(0.7)
+    
+    start_wavelength_um = decimal.Decimal(4)
+    stop_wavelength_um = decimal.Decimal(15)
+    wavelength_step_um = decimal.Decimal(0.001)
+    temp_kelvin = decimal.Decimal(3000)
+#     get_blackbody_and_graybody_and_ratios_and_graph_them(my_gec, start_wavelength_um, stop_wavelength_um, wavelength_step_um, temp_kelvin) 
+    
+    # Check every temperature from 2500 through 6000 in increments of 100K
+    start_temp_kelvin = 5000
+    stop_temp_kelvin = 6000
+    temp_step_kelvin = 10
+    calculate_and_graph_total_power_for_temp_range(my_gec, start_temp_kelvin, stop_temp_kelvin, temp_step_kelvin)
     
     plt.show()
-    my_gec.logger.debug("msg")
+    
     
 #     do_c_III_1(my_gec)
      
