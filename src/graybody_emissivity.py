@@ -46,6 +46,7 @@ class GraybodyEmissivityCalculator(object):
         self.logger.info(self)
         self.wavelengths = []
         self.constant_emissivity = decimal.Decimal(1.0)
+        self.bbody_memo = {}
         
     def set_emissivity_from_csv(self, csv_path):
         with open(csv_path, newline='') as csv_file:
@@ -67,18 +68,22 @@ class GraybodyEmissivityCalculator(object):
         self.constant_emissivity = decimal.Decimal(constant_emissivity)
         
     
+    
     def calculate_blackbody_exitance_at_temp_and_wavelength(self, wavelength_um, temp_kelvin):
-        wavelength_um = decimal.Decimal(wavelength_um)
-        temp_kelvin = decimal.Decimal(temp_kelvin)
-        e_exponent = SECOND_RADIATION_CONSTANT/(wavelength_um*temp_kelvin)  
-        
-        wavelength_raised_to_power = decimal.Decimal(wavelength_um**5)
-        
-#         e_raised_to_exponent = math.e**e_exponent # This gets very large sometimes
-        e_raised_to_exponent = decimal.Decimal(math.e)**decimal.Decimal(e_exponent) # This gets very large sometimes
-        bbody_exitance = decimal.Decimal(FIRST_RADIATION_CONSTANT)/((wavelength_raised_to_power)*(e_raised_to_exponent-decimal.Decimal(1.0)))
-        
-        return bbody_exitance
+        try:
+            return self.bbody_memo[(wavelength_um, temp_kelvin)]
+        except:
+            wavelength_um = decimal.Decimal(wavelength_um)
+            temp_kelvin = decimal.Decimal(temp_kelvin)
+            e_exponent = SECOND_RADIATION_CONSTANT/(wavelength_um*temp_kelvin)  
+            
+            wavelength_raised_to_power = decimal.Decimal(wavelength_um**5)
+            
+    #         e_raised_to_exponent = math.e**e_exponent # This gets very large sometimes
+            e_raised_to_exponent = decimal.Decimal(math.e)**decimal.Decimal(e_exponent) # This gets very large sometimes
+            bbody_exitance = decimal.Decimal(FIRST_RADIATION_CONSTANT)/((wavelength_raised_to_power)*(e_raised_to_exponent-decimal.Decimal(1.0)))
+            self.bbody_memo[(wavelength_um, temp_kelvin)] = bbody_exitance
+            return bbody_exitance
         
         
     def get_actual_emissivity_at_wavelength(self, wavelength_um):
@@ -267,17 +272,21 @@ if __name__ == '__main__':
 #     my_gec.set_emissivity_from_csv("../data/evansite_emissivity.csv")
     my_gec.set_constant_emissivity(0.7)
     
-    start_wavelength_um = decimal.Decimal(4)
-    stop_wavelength_um = decimal.Decimal(15)
-    wavelength_step_um = decimal.Decimal(0.001)
-    temp_kelvin = decimal.Decimal(3000)
+
 #     get_blackbody_and_graybody_and_ratios_and_graph_them(my_gec, start_wavelength_um, stop_wavelength_um, wavelength_step_um, temp_kelvin) 
     
     # Check every temperature from 2500 through 6000 in increments of 100K
     start_temp_kelvin = 5000
     stop_temp_kelvin = 6000
     temp_step_kelvin = 10
-    calculate_and_graph_total_power_for_temp_range(my_gec, start_temp_kelvin, stop_temp_kelvin, temp_step_kelvin)
+#     calculate_and_graph_total_power_for_temp_range(my_gec, start_temp_kelvin, stop_temp_kelvin, temp_step_kelvin)
+    
+    
+    start_wavelength_um = decimal.Decimal(0.1)
+    stop_wavelength_um = decimal.Decimal(100)
+    wavelength_step_um = decimal.Decimal(0.01)
+    temp_kelvin = decimal.Decimal(5515)
+    get_blackbody_and_graybody_and_ratios_and_graph_them(my_gec, start_wavelength_um, stop_wavelength_um, wavelength_step_um, temp_kelvin)
     
     plt.show()
     
