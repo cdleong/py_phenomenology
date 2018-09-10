@@ -14,16 +14,11 @@ import csv
 import numpy as np
 import math
 import matplotlib.pyplot as plt
-
+import pyphenom_physical_constants as ppc
 import decimal
 decimal.getcontext().prec = 100
 
-# CONSTANTS
-FIRST_RADIATION_CONSTANT = decimal.Decimal(3.742*10.0**8)  # W*um^4*m^-2
-SECOND_RADIATION_CONSTANT = decimal.Decimal(1.438*10.0**4)  # um*K
-SPEED_OF_LIGHT_MICRONS_PER_SECOND =  decimal.Decimal(3.0*10.0**8*10.0**6) # speed of light in micrometers per second
-PLANCK_CONSTANT = decimal.Decimal(6.63*10.0**-34) # J *S
-STEFAN_BOLTZMANN_CONSTANT = decimal.Decimal(5.67*10**-8)
+
 
 class GraybodyEmissivityCalculator(object):
     '''
@@ -75,13 +70,13 @@ class GraybodyEmissivityCalculator(object):
         except:
             wavelength_um = decimal.Decimal(wavelength_um)
             temp_kelvin = decimal.Decimal(temp_kelvin)
-            e_exponent = SECOND_RADIATION_CONSTANT/(wavelength_um*temp_kelvin)  
+            e_exponent = ppc.SECOND_RADIATION_CONSTANT/(wavelength_um*temp_kelvin)  
             
             wavelength_raised_to_power = decimal.Decimal(wavelength_um**5)
             
     #         e_raised_to_exponent = math.e**e_exponent # This gets very large sometimes
             e_raised_to_exponent = decimal.Decimal(math.e)**decimal.Decimal(e_exponent) # This gets very large sometimes
-            bbody_exitance = decimal.Decimal(FIRST_RADIATION_CONSTANT)/((wavelength_raised_to_power)*(e_raised_to_exponent-decimal.Decimal(1.0)))
+            bbody_exitance = decimal.Decimal(ppc.FIRST_RADIATION_CONSTANT)/((wavelength_raised_to_power)*(e_raised_to_exponent-decimal.Decimal(1.0)))
             self.bbody_memo[(wavelength_um, temp_kelvin)] = bbody_exitance
             return bbody_exitance
         
@@ -126,7 +121,7 @@ class GraybodyEmissivityCalculator(object):
         return blackbody_exitances, graybody_exitances, wavelengths_um, ratios
 
     def calculate_total_power_across_all_wavelengths_for_temp_if_blackbody(self, temp_kelvin):
-        return STEFAN_BOLTZMANN_CONSTANT*temp_kelvin**4
+        return ppc.STEFAN_BOLTZMANN_CONSTANT*temp_kelvin**4
 
     def calculate_total_power_across_all_wavelengths_for_temp_if_constant_emissivity(self, temp_kelvin):
         blackbody_power = self.calculate_total_power_across_all_wavelengths_for_temp_if_blackbody(temp_kelvin)
