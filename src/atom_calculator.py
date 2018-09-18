@@ -99,43 +99,51 @@ def main():
 #     possible_photon_wavelengths_nanometers.sort()
     print(f"Possible photon wavelengths for {my_atom.name} (nm): {possible_photon_wavelengths_nanometers}")
     
-    principle_quantum_numbers = list(range(1, 5)) # Should give me 1 through 4
+    principle_quantum_numbers = list(range(1, 200)) # Should give me 1 through 200
     hydrogen_electronic_energy_levels = []
     for principle_quantum_number in principle_quantum_numbers:
+        # the bit that uses -13.6/n**2
         hydrogen_electronic_energy_level = calculate_approximate_electronic_energy_level_of_hydrogen(principle_quantum_number)
         hydrogen_electronic_energy_levels.append(hydrogen_electronic_energy_level)
         
+    hydrogen_atom = Atom("Hydrogen", hydrogen_electronic_energy_levels) # make an Atom object with the calculated energy levels
     
-    print(f"{principle_quantum_numbers}")
-    print(f"{[float(item) for item in hydrogen_electronic_energy_levels]}")
+    print(f"Principle Quantum Numbers: {principle_quantum_numbers}")
+    print(f"Energy Levels:             {[float(item) for item in hydrogen_electronic_energy_levels]}")    
     
-    hydrogen_atom = Atom("Hydrogen",hydrogen_electronic_energy_levels)
-    
-    hydrogen_1_to_4_transition_energy_ev = hydrogen_atom.get_energy_delta_for_transition(1, 4)
-    print(round(hydrogen_1_to_4_transition_energy_ev, 2))
-    
-    hydrogen_1_to_4_transition_photon_wavelength = hydrogen_atom.calculate_photon_wavelength_for_delta(hydrogen_1_to_4_transition_energy_ev)
-    print(round(hydrogen_1_to_4_transition_photon_wavelength,5))
-    
-#     for i in range(1,4): 
-#         relaxing_delta_ev = abs(hydrogen_atom.get_energy_delta_for_transition(4,i))
-#         relaxing_wavelength_um = hydrogen_atom.calculate_photon_wavelength_for_delta(relaxing_delta_ev)
-#         relaxing_wavelength_nm = relaxing_wavelength_um * 10**3
-#         print(f"""Relaxing from principle quantum number 4 to {i}: 
-#         delta = ~{relaxing_delta_ev:.2f} eV, 
-#         wavelength = ~{relaxing_wavelength_um:.2f} um or {relaxing_wavelength_nm:.2f} nm""")
-    
-    
-    for i in range(4, 0, -1):        
-        for j in range(i-1, 0, -1):
-            relaxing_delta_ev = hydrogen_atom.get_energy_delta_for_transition(i,j)
-            relaxing_wavelength_um = hydrogen_atom.calculate_photon_wavelength_for_delta(abs(relaxing_delta_ev))
-            relaxing_wavelength_nm = relaxing_wavelength_um * 10**3
-            energy_level_ev_start = hydrogen_atom.get_energy_level_at_principle_quantum_number(i)
-            energy_level_ev_end = hydrogen_atom.get_energy_level_at_principle_quantum_number(j)
-            print(f"""Relaxing from principle quantum number {i} ({energy_level_ev_start:.2f} eV) to {j} ({energy_level_ev_end:.2f} eV): 
-            delta = ~{relaxing_delta_ev:.2f} eV, 
-            wavelength = ~{relaxing_wavelength_um:.2f} um or {relaxing_wavelength_nm:.2f} nm""")
+    about_infinity = 150
+    transitions_to_4 = [5, 6, 7, about_infinity]
+    for transition_start in transitions_to_4:
+        
+        transition_energy_ev =  hydrogen_atom.get_energy_delta_for_transition(transition_start, 4)
+        rounded = round(transition_energy_ev, 2)
+        print(f"Energy delta for transition from {transition_start} to 4 is {rounded} ev")
+        
+        transition_wavelength_um = hydrogen_atom.calculate_photon_wavelength_for_delta(transition_energy_ev)
+        rounded = round(transition_wavelength_um, 2)
+        print(f"Photon wavelength for transition from {transition_start} to 4 is {rounded} um")
+        
+    delta_ev = decimal.Decimal(0.532)
+    print(my_atom.calculate_photon_wavelength_for_delta(delta_ev))
+# #     for i in range(1,4): 
+# #         relaxing_delta_ev = abs(hydrogen_atom.get_energy_delta_for_transition(4,i))
+# #         relaxing_wavelength_um = hydrogen_atom.calculate_photon_wavelength_for_delta(relaxing_delta_ev)
+# #         relaxing_wavelength_nm = relaxing_wavelength_um * 10**3
+# #         print(f"""Relaxing from principle quantum number 4 to {i}: 
+# #         delta = ~{relaxing_delta_ev:.2f} eV, 
+# #         wavelength = ~{relaxing_wavelength_um:.2f} um or {relaxing_wavelength_nm:.2f} nm""")
+#     
+#     
+#     for i in range(4, 0, -1):        
+#         for j in range(i-1, 0, -1):
+#             relaxing_delta_ev = hydrogen_atom.get_energy_delta_for_transition(i,j)
+#             relaxing_wavelength_um = hydrogen_atom.calculate_photon_wavelength_for_delta(abs(relaxing_delta_ev))
+#             relaxing_wavelength_nm = relaxing_wavelength_um * 10**3
+#             energy_level_ev_start = hydrogen_atom.get_energy_level_at_principle_quantum_number(i)
+#             energy_level_ev_end = hydrogen_atom.get_energy_level_at_principle_quantum_number(j)
+#             print(f"""Relaxing from principle quantum number {i} ({energy_level_ev_start:.2f} eV) to {j} ({energy_level_ev_end:.2f} eV): 
+#             delta = ~{relaxing_delta_ev:.2f} eV, 
+#             wavelength = ~{relaxing_wavelength_um:.2f} um or {relaxing_wavelength_nm:.2f} nm""")
     
     
 if __name__ == "__main__":
