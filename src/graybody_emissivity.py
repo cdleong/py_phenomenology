@@ -4,10 +4,6 @@ Created on Sep 3, 2018
 @author: cdleong
 
 
-
-
-
-
 '''
 import logging
 import csv
@@ -41,6 +37,7 @@ class GraybodyEmissivityCalculator(object):
         self.logger.info(self)
         self.wavelengths = []
         self.constant_emissivity = decimal.Decimal(1.0)
+        self.close_enough_wavelength = decimal.Decimal(0.01)
         self.bbody_memo = {}
         
     def set_emissivity_from_csv(self, csv_path):
@@ -82,12 +79,23 @@ class GraybodyEmissivityCalculator(object):
         
         
     def get_actual_emissivity_at_wavelength(self, wavelength_um):
+        wavelength_um = decimal.Decimal(wavelength_um)
         try:
             index = self.wavelengths.index(wavelength_um)
             return self.emissivities[index]
         except ValueError:
-            # We don't have one, just return the constant emissivity
-            return self.constant_emissivity
+            try:
+                close_enough_wavelength = next(x for x in self.wavelengths if (wavelength_um+self.close_enough_wavelength) >= x  and x >= (wavelength_um-self.close_enough_wavelength))
+#                 print(f"orig: {wavelength_um}, close enough: {close_enough_wavelength}")
+                index = self.wavelengths.index(close_enough_wavelength)
+                
+                return self.emissivities[index]
+            except StopIteration:
+                # We don't have one, just return the constant emissivity
+                return self.constant_emissivity
+        
+    def get_reflectivity_at_wavelength(self, wavelength_um):
+        return decimal.Decimal(1.0) - self.get_actual_emissivity_at_wavelength(wavelength_um)
         
     
     def calculate_actual_exitance_from_wavelength_temp_and_emissivity(self, wavelength_um, temp_kelvin, emissivity):        
@@ -136,12 +144,73 @@ class GraybodyEmissivityCalculator(object):
     
     def calculate_temp_given_wavelength(self, wavelength_um):
         return ppc.WIENS_DISPLACEMENT_LAW_APPROXIMATION/wavelength_um
+    
+    def calculate_blackbody_and_graybody_power_in_band(self, start_wavelength_um, stop_wavelength_um, wavelength_step_um, temp_kelvin):
+        start_wavelength_um = decimal.Decimal(start_wavelength_um)
+        stop_wavelength_um = decimal.Decimal(stop_wavelength_um)
+        wavelength_step_um = decimal.Decimal(wavelength_step_um)
         
-def graph_exitance_vs_wavelength_at_temp(wavelengths, exitances, temp_kelvin):
+        # Calculate the exitance at each wavelength step.
+        wavelengths, blackbody_exitances, graybody_exitances = self.get_blackbody_and_graybody_exitances(start_wavelength_um, 
+                                                                                                         stop_wavelength_um, 
+                                                                                                         wavelength_step_um, 
+                                                                                                         temp_kelvin)
+        
+        # Numerically integrate under the curves
+        blackbody_power = self.numerically_integrate_curve(list_of_x_values=wavelengths, list_of_y_values=blackbody_exitances)
+        graybody_power = self.numerically_integrate_curve(list_of_x_values=wavelengths, list_of_y_values=graybody_exitances)
+        return blackbody_power, graybody_power
+        
+
+    def get_blackbody_and_graybody_exitances(self, start_wavelength_um, stop_wavelength_um, wavelength_step_um, temp_kelvin):
+        blackbody_exitances = [] 
+        graybody_exitances = []
+        wavelengths = np.arange(start_wavelength_um, stop_wavelength_um, wavelength_step_um)
+        for wavelength_um in wavelengths:
+            bbody_exitance = self.calculate_blackbody_exitance_at_temp_and_wavelength(wavelength_um, temp_kelvin)
+            blackbody_exitances.append(bbody_exitance)
+            gbody_exitance = self.calculate_actual_exitance_at_temp_and_wavelength(wavelength_um, temp_kelvin)
+            graybody_exitances.append(gbody_exitance)
+        
+        return wavelengths, blackbody_exitances, graybody_exitances    
+    
+    def get_reflected_exitances_from_blackbody_radiation(self, start_wavelength_um, stop_wavelength_um, wavelength_step_um, temp_kelvin):
+        reflected_exitances = []
+        reflectivities = []
+        wavelengths = np.arange(start_wavelength_um, stop_wavelength_um, wavelength_step_um)
+        for wavelength_um in wavelengths:
+            bbody_exitance = self.calculate_blackbody_exitance_at_temp_and_wavelength(wavelength_um, temp_kelvin)
+            reflectivity_at_wavelength = self.get_reflectivity_at_wavelength(wavelength_um)
+            
+            reflected_exitance_at_wavelength = bbody_exitance*reflectivity_at_wavelength
+#             self.logger.debug(f"at wavelength {wavelength_um}, bbody exitance is: {bbody_exitance}, reflectivity is: {reflectivity_at_wavelength}")
+            
+            reflectivities.append(reflectivity_at_wavelength)
+            reflected_exitances.append(reflected_exitance_at_wavelength)
+        return wavelengths, reflected_exitances, reflectivities
+        
+
+def graph_reflectivity_vs_wavelength(wavelengths, reflectivities, semilog=False):
+    plt.figure()
+    plt.title(f"Graph for reflectivity vs wavelength, semilog={semilog}")
+    
+    if semilog:
+        plt.semilogx(wavelengths, reflectivities)
+    else:
+        plt.scatter(wavelengths, reflectivities)  
+    
+    plt.xlabel('wavelength (um)')
+    plt.ylabel('relectivity')
+    
+        
+def graph_exitance_vs_wavelength_at_temp(wavelengths, exitances, temp_kelvin, loglog=True):
         # Graph it
     plt.figure()
-    plt.title(f"Graph for Temp:{temp_kelvin}")
-    plt.loglog(wavelengths, exitances)   
+    plt.title(f"Graph for Temp:{temp_kelvin}, loglog={loglog}")
+    if loglog:
+        plt.loglog(wavelengths, exitances) 
+    else:
+        plt.scatter(wavelengths, exitances)   
     plt.xlabel('wavelength (um)')
     plt.ylabel('Spectral Radiant Exitance (Watts per sq m per um)')    
         
@@ -180,7 +249,7 @@ def graph_power_vs_temp(temps_kelvin, powers_for_temps):
 def iii_10(my_gec):
 
     start_wavelength_um = 0.1
-    stop_wavelength_um = 5
+    stop_wavelength_um = 2.0
     wavelength_step_um = 0.01
     temp_kelvin = 2400
     exitances = []
@@ -245,21 +314,11 @@ def calculate_and_graph_total_power_for_temp_range(my_gec, start_temp_kelvin, st
     graph_power_vs_temp(temps_kelvin, powers_for_temps)
 
 
-def get_blackbody_and_graybody_exitances(my_gec, start_wavelength_um, stop_wavelength_um, wavelength_step_um, temp_kelvin):
-    blackbody_exitances = [] 
-    graybody_exitances = []
-    wavelengths = np.arange(start_wavelength_um, stop_wavelength_um, wavelength_step_um)
-    for wavelength_um in wavelengths:
-        bbody_exitance = my_gec.calculate_blackbody_exitance_at_temp_and_wavelength(wavelength_um, temp_kelvin)
-        blackbody_exitances.append(bbody_exitance)
-        gbody_exitance = my_gec.calculate_actual_exitance_at_temp_and_wavelength(wavelength_um, temp_kelvin)
-        graybody_exitances.append(gbody_exitance)
-    
-    return wavelengths, blackbody_exitances, graybody_exitances
+
 
 def get_blackbody_and_graybody_and_ratios_and_graph_them(my_gec, start_wavelength_um, stop_wavelength_um, wavelength_step_um, temp_kelvin):
 
-    wavelengths, blackbody_exitances, graybody_exitances = get_blackbody_and_graybody_exitances(my_gec, start_wavelength_um, stop_wavelength_um, wavelength_step_um, temp_kelvin)
+    wavelengths, blackbody_exitances, graybody_exitances = my_gec.get_blackbody_and_graybody_exitances(start_wavelength_um, stop_wavelength_um, wavelength_step_um, temp_kelvin)
     
     
     
@@ -278,48 +337,42 @@ def get_blackbody_and_graybody_and_ratios_and_graph_them(my_gec, start_wavelengt
 if __name__ == '__main__':
     my_gec = GraybodyEmissivityCalculator()
 #     my_gec.set_emissivity_from_csv("../data/evansite_emissivity.csv")
-    my_gec.set_constant_emissivity(0.7)
+    my_gec.set_emissivity_from_csv("../data/V_3_emissivity.csv")
+
+    # Problem III-5
+#     my_gec.set_constant_emissivity(0.8)    
+
+    start_wavelength_um = 0.1
+    stop_wavelength_um = 20.00 
+    wavelength_step_um = 0.1
+    temp_kelvin = 2727
+    wavelengths, blackbody_exitances, graybody_exitances  = my_gec.get_blackbody_and_graybody_exitances(start_wavelength_um, 
+                                                                                                        stop_wavelength_um, 
+                                                                                                        wavelength_step_um, 
+                                                                                                        temp_kelvin)
+    
+    
+    
+    graph_exitance_vs_wavelength_at_temp(wavelengths, blackbody_exitances, temp_kelvin)
+    
+    wavelengths, reflected_exitances, reflectivities = my_gec.get_reflected_exitances_from_blackbody_radiation(start_wavelength_um, stop_wavelength_um, wavelength_step_um, temp_kelvin)
+    graph_exitance_vs_wavelength_at_temp(wavelengths, reflected_exitances, temp_kelvin)
+    graph_exitance_vs_wavelength_at_temp(wavelengths, reflected_exitances, temp_kelvin, loglog=False)
+    graph_reflectivity_vs_wavelength(wavelengths, reflectivities)
+    graph_reflectivity_vs_wavelength(wavelengths, reflectivities, semilog=True)
+#     graph_blackbody_and_graybody_vs_wavelength_at_temp(wavelengths, 
+#                                                        blackbody_exitances, 
+#                                                        graybody_exitances, 
+#                                                        temp_kelvin)
+#     
+#     blackbody_power, graybody_power = my_gec.calculate_blackbody_and_graybody_power_in_band(start_wavelength_um, 
+#                                                                                             stop_wavelength_um, 
+#                                                                                             wavelength_step_um, 
+#                                                                                             temp_kelvin)
+#     print(f"Blackbody power in band: {blackbody_power}, Graybody power in band: {graybody_power}")
+#     
     
 
-#     get_blackbody_and_graybody_and_ratios_and_graph_them(my_gec, start_wavelength_um, stop_wavelength_um, wavelength_step_um, temp_kelvin) 
-    
-    # Check every temperature from 2500 through 6000 in increments of 100K
-    start_temp_kelvin = 5000
-    stop_temp_kelvin = 6000
-    temp_step_kelvin = 10
-#     calculate_and_graph_total_power_for_temp_range(my_gec, start_temp_kelvin, stop_temp_kelvin, temp_step_kelvin)
-    
-    
-    start_wavelength_um = decimal.Decimal(1.0)
-    stop_wavelength_um = decimal.Decimal(2.0)
-    wavelength_step_um = decimal.Decimal(0.01)
-    
-#     temps_kelvins = list(range(480,580,1))
-#     powers_for_temps = []
-#     
-#     for temp_kelvin in temps_kelvins:
-#         temp_kelvin = decimal.Decimal(temp_kelvin)
-#         wavelengths, blackbody_exitances, graybody_exitances = get_blackbody_and_graybody_exitances(my_gec, start_wavelength_um, stop_wavelength_um, wavelength_step_um, temp_kelvin)
-#         power_in_band = my_gec.numerically_integrate_curve(wavelengths, graybody_exitances)
-#         powers_for_temps.append(power_in_band)
-#         print(f"Calculated power in band for temp {temp_kelvin} K")
-#   
-#     graph_power_vs_temp(temps_kelvins, powers_for_temps)
-    
-    temp_kelvin = 1500
-    
-    
-    wavelengths, blackbody_exitances, graybody_exitances = get_blackbody_and_graybody_exitances(my_gec, start_wavelength_um, stop_wavelength_um, wavelength_step_um, temp_kelvin)
-    graph_exitance_vs_wavelength_at_temp(wavelengths, blackbody_exitances, temp_kelvin)
-    print(my_gec.numerically_integrate_curve(wavelengths, graybody_exitances))
-    
-    one_exit = float(my_gec.calculate_blackbody_exitance_at_temp_and_wavelength(1.0, temp_kelvin))
-    two_exit = float(my_gec.calculate_blackbody_exitance_at_temp_and_wavelength(2.0, temp_kelvin))
-    ratio = one_exit/two_exit
-    print(f"blackbody exitance at 1 um: {one_exit}")
-    print(f"blackbody exitance at 2 um: {two_exit}")
-    print(f"ratio: {ratio}")
-    
     plt.show()
     
     
