@@ -12,6 +12,7 @@ import math
 import matplotlib.pyplot as plt
 import pyphenom_physical_constants as ppc
 import decimal
+import reflectivity
 decimal.getcontext().prec = 100
 
 
@@ -178,21 +179,29 @@ class GraybodyEmissivityCalculator(object):
         reflected_exitances = []
         reflectivities = []
         wavelengths = np.arange(start_wavelength_um, stop_wavelength_um, wavelength_step_um)
+        
+        
         for wavelength_um in wavelengths:
             bbody_exitance = self.calculate_blackbody_exitance_at_temp_and_wavelength(wavelength_um, temp_kelvin)
             reflectivity_at_wavelength = self.get_reflectivity_at_wavelength(wavelength_um)
             
             reflected_exitance_at_wavelength = bbody_exitance*reflectivity_at_wavelength
-#             self.logger.debug(f"at wavelength {wavelength_um}, bbody exitance is: {bbody_exitance}, reflectivity is: {reflectivity_at_wavelength}")
+            self.logger.debug(f"at wavelength {wavelength_um}, bbody exitance is: {bbody_exitance}, reflectivity is: {reflectivity_at_wavelength}")
             
             reflectivities.append(reflectivity_at_wavelength)
             reflected_exitances.append(reflected_exitance_at_wavelength)
-        return wavelengths, reflected_exitances, reflectivities
+        return wavelengths, reflected_exitances
         
 
-def graph_reflectivity_vs_wavelength(wavelengths, reflectivities, semilog=False):
+def graph_reflectivity_or_other_things_vs_wavelength(wavelengths, reflectivities, semilog=False, title=""):
     plt.figure()
-    plt.title(f"Graph for reflectivity vs wavelength, semilog={semilog}")
+    
+    
+    if title: 
+        plt.title(title)
+    else: 
+        plt.title(f"Graph for reflectivity vs wavelength, semilog={semilog}")
+    
     
     if semilog:
         plt.semilogx(wavelengths, reflectivities)
@@ -203,16 +212,64 @@ def graph_reflectivity_vs_wavelength(wavelengths, reflectivities, semilog=False)
     plt.ylabel('relectivity')
     
         
-def graph_exitance_vs_wavelength_at_temp(wavelengths, exitances, temp_kelvin, loglog=True):
+def graph_exitance_vs_wavelength_at_temp(wavelengths, exitances, temp_kelvin, loglog=True, title=""):
         # Graph it
     plt.figure()
-    plt.title(f"Graph for Temp:{temp_kelvin}, loglog={loglog}")
+    if title: 
+        plt.title(title)
+    else:    
+        plt.title(f"Graph for Temp:{temp_kelvin}, loglog={loglog}")
+        
     if loglog:
         plt.loglog(wavelengths, exitances) 
     else:
         plt.scatter(wavelengths, exitances)   
     plt.xlabel('wavelength (um)')
     plt.ylabel('Spectral Radiant Exitance (Watts per sq m per um)')    
+
+
+def graph_n_exitances_vs_wavelength_at_temp(wavelengths, exitances_lists_list, list_titles_list, temp_kelvin, loglog=True, title=""):
+    # Graph it
+    plt.figure()
+    if title: 
+        plt.title(title)
+    else:        
+        plt.title(f"Graph for Temp:{temp_kelvin}")
+
+    
+    for index, exitance_list in enumerate(exitances_lists_list):
+        list_title=""
+        
+        try:
+            list_title=list_titles_list[index]     
+        except IndexError:
+            list_title=str(index)
+            
+            
+        if loglog:        
+            plt.loglog(wavelengths, exitance_list, label=list_title)    
+        else:
+            plt.scatter(wavelengths, exitance_list, label=list_title)     
+    plt.legend()
+    plt.xlabel('wavelength (um)')
+    plt.ylabel('Spectral Radiant Exitance (Watts per sq m per um)')    
+
+def graph_two_exitances_vs_wavelength_at_temp(wavelengths, first_exitances_list, second_exitances_list, temp_kelvin, loglog=True, title=""):
+    # Graph it
+    plt.figure()
+    if title: 
+        plt.title(title)
+    else:        
+        plt.title(f"Graph for Temp:{temp_kelvin}")
+
+    if loglog:
+        plt.loglog(wavelengths, first_exitances_list)   
+        plt.loglog(wavelengths, second_exitances_list)    
+    else:
+        plt.scatter(wavelengths, first_exitances_list)   
+        plt.scatter(wavelengths, second_exitances_list)    
+    plt.xlabel('wavelength (um)')
+    plt.ylabel('Spectral Radiant Exitance (Watts per sq m per um)')
         
 def graph_blackbody_and_graybody_vs_wavelength_at_temp(wavelengths, blackbody_exitances, graybody_exitances, temp_kelvin):
     # Graph it
@@ -333,44 +390,117 @@ def get_blackbody_and_graybody_and_ratios_and_graph_them(my_gec, start_wavelengt
     graph_blackbody_and_graybody_vs_wavelength_at_temp(wavelengths, blackbody_exitances, graybody_exitances, temp_kelvin)
     
     graph_ratios(wavelengths, ratios, temp_kelvin)    
+
+
+def c_II_2_c(reflected_exitances, graybody_exitances):
+    # PART C
+#     ref_wavelengths, reflected_exitances = evansite_gec.get_reflected_exitances_from_blackbody_radiation(start_wavelength_um, stop_wavelength_um, wavelength_step_um, temp_kelvin=1000)
+#     bg_wavelengths, blackbody_exitances, graybody_exitances = evansite_gec.get_blackbody_and_graybody_exitances(start_wavelength_um, stop_wavelength_um, wavelength_step_um, temp_kelvin=500)
+#     graph_exitance_vs_wavelength_at_temp(bg_wavelengths, graybody_exitances, temp_kelvin, loglog=True, title=f"loglog graybody_exitances for temp {temp_kelvin}K")
+#     graph_exitance_vs_wavelength_at_temp(bg_wavelengths, graybody_exitances, temp_kelvin, loglog=False, title=f"scatter graybody_exitances for temp {temp_kelvin}K")
+#     graph_exitance_vs_wavelength_at_temp(ref_wavelengths, reflected_exitances, temp_kelvin, loglog=True, title = f"loglog reflected exitances for temp {temp_kelvin}K")
+#     graph_exitance_vs_wavelength_at_temp(ref_wavelengths, reflected_exitances, temp_kelvin, loglog=False, title = f"scatter reflected exitances for temp {temp_kelvin}K")
+#     graph_two_exitances_vs_wavelength_at_temp(ref_wavelengths, graybody_exitances, reflected_exitances, temp_kelvin, title="Graybody and reflected exitances")
+#     graph_two_exitances_vs_wavelength_at_temp(ref_wavelengths, graybody_exitances, reflected_exitances, temp_kelvin,loglog=False, title="Graybody and reflected exitances")
+    sums = []
+    for value in zip(reflected_exitances, graybody_exitances):
+        reflected, emitted = value
+        sum_of_exitances = reflected + emitted
+        sums.append(sum_of_exitances)
+    
+    exitances_lists_list = []
+    exitances_lists_list.append(reflected_exitances)
+    exitances_lists_list.append(graybody_exitances)
+    exitances_lists_list.append(sums)
+    titles_list = ["Reflected", "Graybody", "Sum"]
+
+
+def c_II_2_b(temps_kelvin, evansite_gec):
+    # PART B
+# Graph reflected exitances
+    start_wavelength_um = 0.1
+    wavelength_step_um = 0.01
+    stop_wavelength_um = 16.00 + wavelength_step_um
+    for temp_kelvin in temps_kelvin:
+        ref_wavelengths, reflected_exitances = evansite_gec.get_reflected_exitances_from_blackbody_radiation(start_wavelength_um, stop_wavelength_um, wavelength_step_um, temp_kelvin)
+        bg_wavelengths, blackbody_exitances, graybody_exitances = evansite_gec.get_blackbody_and_graybody_exitances(start_wavelength_um, stop_wavelength_um, wavelength_step_um, temp_kelvin)
+        graph_exitance_vs_wavelength_at_temp(ref_wavelengths, reflected_exitances, temp_kelvin)
+        graph_exitance_vs_wavelength_at_temp(bg_wavelengths, blackbody_exitances, temp_kelvin, loglog=True, title="loglog blackbody exitance for temp {temp_kelvin}K")
+        graph_exitance_vs_wavelength_at_temp(bg_wavelengths, blackbody_exitances, temp_kelvin, loglog=False, title="Scatter blackbody exitance for temp {temp_kelvin}K")
+        graph_exitance_vs_wavelength_at_temp(bg_wavelengths, graybody_exitances, temp_kelvin, loglog=True, title="loglog graybody_exitances for temp {temp_kelvin}K")
+        graph_exitance_vs_wavelength_at_temp(bg_wavelengths, graybody_exitances, temp_kelvin, loglog=False, title="Scatter graybody_exitances for temp {temp_kelvin}K")
+        graph_exitance_vs_wavelength_at_temp(ref_wavelengths, reflected_exitances, temp_kelvin, loglog=True, title="loglog reflected exitances for temp {temp_kelvin}K")
+        graph_exitance_vs_wavelength_at_temp(ref_wavelengths, reflected_exitances, temp_kelvin, loglog=False, title="Scatter reflected exitances for temp {temp_kelvin}K")
+    
+
+
+def c_II_2():    
+    start_wavelength_um = 0.01
+    wavelength_step_um = 0.01
+    stop_wavelength_um = 16.00  + wavelength_step_um
+    
+    temps_kelvin = [300,1340,6000]
+    
+    evansite_gec = GraybodyEmissivityCalculator()
+    evansite_gec.set_emissivity_from_csv("../data/evansite_emissivity.csv")
+    
+
+    # calculate reflectivities
+    wavelengths = np.arange(start_wavelength_um, stop_wavelength_um, wavelength_step_um)
+    emissivities = []
+    reflectivities = []
+    for wavelength in wavelengths:
+        emissivity = evansite_gec.get_actual_emissivity_at_wavelength(wavelength)
+        reflectivity = evansite_gec.get_reflectivity_at_wavelength(wavelength)
+        emissivities.append(emissivity)
+        reflectivities.append(reflectivity)
+    
+    # PART A
+    # graph reflectivities    
+    graph_reflectivity_or_other_things_vs_wavelength(wavelengths, reflectivities, semilog=False)
+    graph_reflectivity_or_other_things_vs_wavelength(wavelengths, emissivities, semilog=False, title="Graph for Emissivity vs wavelength")
+     
+
+#     c_II_2_b(temps_kelvin, evansite_gec)
+        
+        
+    
+
+#     c_II_2_c(reflected_exitances, graybody_exitances)
+
+    # PART D
+    start_wavelength_um = 3.0
+    wavelength_step_um = 0.01
+    stop_wavelength_um = 5.00
+    wavelengths = np.arange(start_wavelength_um, stop_wavelength_um, wavelength_step_um)
+    reflectivities = []
+    for wavelength in wavelengths:
+        reflectivity = evansite_gec.get_reflectivity_at_wavelength(wavelength)
+        reflectivities.append(reflectivity)    
+        
+    graph_reflectivity_or_other_things_vs_wavelength(wavelengths, reflectivities, semilog=False)
+    graph_reflectivity_or_other_things_vs_wavelength(wavelengths, reflectivities, semilog=True)
+            
+    average_reflectivity = math.fsum(reflectivities)/len(reflectivities)
+    print(f"Average reflectivity: {average_reflectivity}")
+    integration = evansite_gec.numerically_integrate_curve(wavelengths, reflectivities)
+    other_average = integration/(stop_wavelength_um-start_wavelength_um)
+    print(f"Other average: {other_average}")
+    
+
+    # PART E
+
+    
+    
+    for temp_kelvin in temps_kelvin:
+        blackbody_power, graybody_power = evansite_gec.calculate_blackbody_and_graybody_power_in_band(start_wavelength_um, stop_wavelength_um, wavelength_step_um, temp_kelvin)
+        ratio = graybody_power/blackbody_power
+        print(f"Effective Average Reflectance for temp {temp_kelvin}={ratio}")
+    
     
 if __name__ == '__main__':
-    my_gec = GraybodyEmissivityCalculator()
-#     my_gec.set_emissivity_from_csv("../data/evansite_emissivity.csv")
-    my_gec.set_emissivity_from_csv("../data/V_3_emissivity.csv")
-
-    # Problem III-5
-#     my_gec.set_constant_emissivity(0.8)    
-
-    start_wavelength_um = 0.1
-    stop_wavelength_um = 20.00 
-    wavelength_step_um = 0.1
-    temp_kelvin = 2727
-    wavelengths, blackbody_exitances, graybody_exitances  = my_gec.get_blackbody_and_graybody_exitances(start_wavelength_um, 
-                                                                                                        stop_wavelength_um, 
-                                                                                                        wavelength_step_um, 
-                                                                                                        temp_kelvin)
     
-    
-    
-    graph_exitance_vs_wavelength_at_temp(wavelengths, blackbody_exitances, temp_kelvin)
-    
-    wavelengths, reflected_exitances, reflectivities = my_gec.get_reflected_exitances_from_blackbody_radiation(start_wavelength_um, stop_wavelength_um, wavelength_step_um, temp_kelvin)
-    graph_exitance_vs_wavelength_at_temp(wavelengths, reflected_exitances, temp_kelvin)
-    graph_exitance_vs_wavelength_at_temp(wavelengths, reflected_exitances, temp_kelvin, loglog=False)
-    graph_reflectivity_vs_wavelength(wavelengths, reflectivities)
-    graph_reflectivity_vs_wavelength(wavelengths, reflectivities, semilog=True)
-#     graph_blackbody_and_graybody_vs_wavelength_at_temp(wavelengths, 
-#                                                        blackbody_exitances, 
-#                                                        graybody_exitances, 
-#                                                        temp_kelvin)
-#     
-#     blackbody_power, graybody_power = my_gec.calculate_blackbody_and_graybody_power_in_band(start_wavelength_um, 
-#                                                                                             stop_wavelength_um, 
-#                                                                                             wavelength_step_um, 
-#                                                                                             temp_kelvin)
-#     print(f"Blackbody power in band: {blackbody_power}, Graybody power in band: {graybody_power}")
-#     
+    c_II_2()
     
 
     plt.show()
