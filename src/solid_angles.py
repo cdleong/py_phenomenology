@@ -18,3 +18,9 @@ def calculate_approx_square_fov(theta_one_rad, theta_two_rad):
 
 def calculate_approx_cone_angle_given_symmetric_solid_angle(solid_angle_steradians):
     return math.sqrt((4 * solid_angle_steradians)/math.pi)
+
+def calculate_area_subtended_by_fov(distance_r_meters, fov_sr):
+    #fov is A/r^2
+    # therefore, A = fov*r^2
+    return distance_r_meters**2 * fov_sr
+    
