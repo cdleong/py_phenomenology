@@ -165,7 +165,7 @@ def vii_10_b():
     print(f"The source area is {source_area_sq_m} square meters, or {source_area_sq_km} square km")
 
 def c_iii_1():
-    sa = standard_atmosphere.atmo_calculator()
+    sa = standard_atmosphere.Atmosphere()
     
     
     altitudes_km = []
@@ -183,7 +183,7 @@ def c_iii_1():
         
         sum_of_ppm = 0.0
         
-        for gas_name in standard_atmosphere.atmo_calculator.standard_atmo_gas_names:
+        for gas_name in standard_atmosphere.Atmosphere.standard_atmo_gas_names:
             gas_ppm = row[gas_name]
             print(f"    at alt {alt_km}, {gas_name} has {gas_ppm} ppm")
             sum_of_ppm = sum_of_ppm + gas_ppm
