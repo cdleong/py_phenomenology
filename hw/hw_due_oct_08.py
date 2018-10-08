@@ -7,8 +7,8 @@ import radiometry
 import numpy as np
 import math
 import matplotlib.pyplot as plt
-import matplotlib
 from solid_angles import calculate_area_subtended_by_fov
+import standard_atmosphere
 
 def vii_7():
     x_meters = 10.0
@@ -164,10 +164,80 @@ def vii_10_b():
     source_area_sq_km = source_area_sq_m / 1e6
     print(f"The source area is {source_area_sq_m} square meters, or {source_area_sq_km} square km")
 
+def c_iii_1():
+    sa = standard_atmosphere.atmo_calculator()
+    
+    
+    altitudes_km = []
+    molecular_densities_per_cubic_cm = []
+    pressures = []
+    sums_of_ppms = []
+    for index, row in sa.atmo_df.iterrows():
+        alt_km = row["ALT"]
+        density_inv_cubic_cm = row["DENSITY"]
+        pressure_millbar = row["PRES"]
+        
+        altitudes_km.append(alt_km)
+        molecular_densities_per_cubic_cm.append(density_inv_cubic_cm)
+        pressures.append(pressure_millbar)
+        
+        sum_of_ppm = 0.0
+        
+        for gas_name in standard_atmosphere.atmo_calculator.standard_atmo_gas_names:
+            gas_ppm = row[gas_name]
+            print(f"    at alt {alt_km}, {gas_name} has {gas_ppm} ppm")
+            sum_of_ppm = sum_of_ppm + gas_ppm
+
+        percent_of_million = sum_of_ppm/1000000
+        sums_of_ppms.append(sum_of_ppm)
+        print(f"at altitude {alt_km}, density is {density_inv_cubic_cm}, pressure is {pressure_millbar} mb, sum of ppm figures is {sum_of_ppm}, or {percent_of_million} fraction")
+        
+    plt.figure()
+    plt.title("Molecular density vs altitude, US Standard Atmo")    
+    plt.scatter(molecular_densities_per_cubic_cm, altitudes_km)    
+    plt.xlabel('molecular density per cubic centimeter')    
+    plt.ylabel('altitude, km')
+     
+     
+    plt.figure()
+    plt.title("Pressure vs density")
+    plt.plot(pressures, molecular_densities_per_cubic_cm)
+    plt.xlabel('pressure, millibars')
+    plt.ylabel('molecular density per cubic centimeter')
+    
+
+    fig, ax1 = plt.subplots()
+    plt.title("Pressure and density vs alt")
+    plt.ylabel('altitude, km')
+    
+    ax1.set_xlabel("molecular density per cubic centimeter")
+    ax1.plot(molecular_densities_per_cubic_cm, altitudes_km, color='b')
+    
+    ax2 = ax1.twiny()
+    ax2.set_xlabel("pressure milllibars")
+    ax2.plot(pressures, altitudes_km, color='r')
+#     fig.tight_layout()
+    
+    plt.figure()
+    plt.title("sum of ppms/one million vs altitude")    
+    plt.xlabel('% of one million')   
+    plt.ylabel('altitude, km')
+    percent_values = [(x/1000000)*100 for x in sums_of_ppms]
+    plt.plot(percent_values, altitudes_km)
+    
+    
+    
+        
+    plt.show()
+    plt.title("Molecular density vs altitude, US Standard Atmo")    
+
+
 if __name__ == '__main__':
+    print("hello world")
 #     vii_7()
 #     vii_10_a()
-    vii_10_b()
+#     vii_10_b()
+    c_iii_1()
     
     
     
