@@ -8,6 +8,7 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 import matplotlib
+from solid_angles import calculate_area_subtended_by_fov
 
 def vii_7():
     x_meters = 10.0
@@ -56,30 +57,77 @@ def vii_7():
 def vii_9():
     pass
 
-def vii_10():
+def vii_10_a():
     
     radius_of_earth_km = 6371
     radius_of_satellite_km = 0.5 / 1000
     altitude_of_satellite_km = 200
     
     xlim = 20000
-    ylim = 20000
+    ylim = 10000
     
     fig, ax = plt.subplots()    
     patches = []
     
+    
+    # Plot the Earth
     earth_x = xlim/2
     earth_y = 0
     earth_circle = plt.Circle((earth_x,earth_y), radius_of_earth_km, color='DarkBlue')
 
-    
+    # Plot the Sat
     sat_x = 10000
     sat_y = radius_of_earth_km+altitude_of_satellite_km
-    sat_circle = plt.Circle((sat_x, sat_y), radius_of_satellite_km, color="DarkGray")
+    how_big_to_draw_satellite = radius_of_satellite_km*1
+    sat_circle = plt.Circle((sat_x, sat_y), how_big_to_draw_satellite, color="DarkGray")
     sat_circle.set_color("DarkGray")
+    
+    # Optionally, make a nice circle around the satellite, touching the ground
+    sensor_circle = plt.Circle((sat_x, sat_y), altitude_of_satellite_km, edgecolor = "Black", fill = False)
+    
+    
+    # draw a line from the sat to the ground
+    ground_right_below_sat_x = sat_x
+    ground_right_below_sat_y = radius_of_earth_km    
+    ground_sat_line = plt.Line2D([sat_x, ground_right_below_sat_x], [sat_y, ground_right_below_sat_y], color="Black")
 
+    ##############################
+    # Draw a line at 45 degrees
+
+    # given length of side we want
+    length_desired = 400 # right into the Earth please
+    
+    # and angle...
+    angle_desired_degrees = 45
+    angle_desire_rad = math.radians(angle_desired_degrees)
+    
+    # new x, new_y = 
+    delta_x = length_desired*math.cos(angle_desire_rad)
+    delta_y = length_desired*math.sin(angle_desire_rad)
+    
+    new_x = sat_x + delta_x
+    new_y = sat_y - delta_y
+    
+    sat_target_line = plt.Line2D([sat_x, new_x], [sat_y, new_y], color="Red")
+    
+    
+    ######################################################
+    # Atmosphere circle
+    atm_x = earth_x
+    atm_y = earth_y
+    
+    # Karman line: 100km
+    karman_line = 100
+    atm_radius = radius_of_earth_km + karman_line
+    atm_circle = plt.Circle((atm_x, atm_y), atm_radius, edgecolor = "Blue", fill = False)
+
+    # add artists
     ax.add_artist(earth_circle)
     ax.add_artist(sat_circle)
+#     ax.add_artist(sensor_circle)
+    ax.add_artist(ground_sat_line)
+    ax.add_artist(sat_target_line)
+    ax.add_artist(atm_circle)
     
     ax.set_xlim(0, xlim)
     ax.set_ylim(0, ylim)
@@ -87,10 +135,40 @@ def vii_10():
     
     plt.gca().set_aspect('equal', adjustable='box')
     
-    plt.title("The situation")
+    plt.title("Earth and Satellite, to scale, with sensor-target line and Karman line")
+    
+    plt.xlabel('km')
+    plt.ylabel('km')
+    
+    # calculate distance, given values gleaned from plot
+    target_x = 10203
+    target_y = 6368
+    dist = math.hypot(target_x - sat_x, target_y - sat_y)
+    print(f"sat-target distance: {dist}")
+    
+    # calculate distance, given values gleaned from plot
+    hit_atmo_x = 10100
+    hit_atmo_y = 6470
+    atmo_dist = math.hypot(target_x - hit_atmo_x, target_y - hit_atmo_y)
+    print(f"the sensor has to look through: {atmo_dist} km of atmo")
+    
+    
     plt.show()
 
 
+def vii_10_b():
+    sat_target_distance_km = 287.0853531617383  # from part a
+    distance_r_meters = sat_target_distance_km*1000  # 1000 meters per kilometer
+    fov_sr = 0.004
+    source_area_sq_m = calculate_area_subtended_by_fov(distance_r_meters, fov_sr)
+    source_area_sq_km = source_area_sq_m / 1e6
+    print(f"The source area is {source_area_sq_m} square meters, or {source_area_sq_km} square km")
+
 if __name__ == '__main__':
 #     vii_7()
-    vii_10()
+#     vii_10_a()
+    vii_10_b()
+    
+    
+    
+    
