@@ -43,17 +43,19 @@ class Atmosphere(object):
         return standard_atmo_df
 
 
-def hydrostatic_molecular_density_at_altitude(altitude_meters, 
+def hydrostatic_molecular_density_at_altitude_per_cubic_meter(altitude_meters, 
                                               scale_height=None):
-    n_zero = pyphenom_physical_constants.LOSCHMIDTS_NUMBER
+    """If scale height not given, it will be calculated using calculate_isothermal_atmo_scale_height_meters(), 
+    using default settings"""
+    n_zero = pyphenom_physical_constants.LOSCHMIDTS_NUMBER # "per cubic meter"
     
     # If scale height not given, calculate with default settings
     if not scale_height:
         scale_height = calculate_isothermal_atmo_scale_height_meters()
 
     exponent_term = -altitude_meters/scale_height
-    molecular_density_at_altitude = n_zero*math.pow(math.e, exponent_term)
-    return molecular_density_at_altitude
+    molecular_density_at_altitude_per_cubic_meter = n_zero*math.pow(math.e, exponent_term) 
+    return molecular_density_at_altitude_per_cubic_meter
     
 
 def calculate_isothermal_atmo_scale_height_meters(temp_kelvin=pyphenom_physical_constants.APPROXIMATE_TEMPERATURE_OF_EARTH_KELVINS, # avg temperature of Earth, Earth stuff 
@@ -79,12 +81,12 @@ if __name__ == '__main__':
     print(f"isothermal atmosphere scale height: {scale_height_m}")
     print(f"Internet says we should get about 8km for Earth's atmosphere")
     
-    sea_level_density = hydrostatic_molecular_density_at_altitude(0, scale_height_m)
-    scale_height_density = hydrostatic_molecular_density_at_altitude(scale_height_m, scale_height_m)
-    ratio = scale_height_density/sea_level_density
+    sea_level_density_per_cubic_meter = hydrostatic_molecular_density_at_altitude_per_cubic_meter(0, scale_height_m)
+    scale_height_density_per_cubic_meter = hydrostatic_molecular_density_at_altitude_per_cubic_meter(scale_height_m, scale_height_m)
+    ratio = scale_height_density_per_cubic_meter/sea_level_density_per_cubic_meter
     one_over_e = 1/math.e
-    print(f"at alt= 0, molecular density is {sea_level_density}")
-    print(f"at alt= {scale_height_m} meters, molecular density is {scale_height_density}")
+    print(f"at alt= 0, molecular density is {sea_level_density_per_cubic_meter}")
+    print(f"at alt= {scale_height_m} meters, molecular density is {scale_height_density_per_cubic_meter}")
     print(f"1/e is: {one_over_e}, scale_height_density/sea_level_density is {ratio}")
     
         
