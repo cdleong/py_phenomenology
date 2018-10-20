@@ -5,7 +5,7 @@ Created on Oct 8, 2018
 '''
 import pandas as pd #also need xlrd
 import math
-import pyphenom_physical_constants
+from . import pyphenom_physical_constants
 
 APPROXIMATE_MEAN_MOLECULAR_MASS_OF_EARTH_ATMOSPHERE_KG = 4.79*10**-26
 

@@ -10,9 +10,10 @@ import csv
 import numpy as np
 import math
 import matplotlib.pyplot as plt
-import pyphenom_physical_constants as ppc
 import decimal
-import reflectivity
+
+from . import pyphenom_physical_constants as ppc
+from . import reflectivity
 decimal.getcontext().prec = 100
 
 
