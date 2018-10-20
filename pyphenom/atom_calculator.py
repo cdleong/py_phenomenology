@@ -3,7 +3,7 @@ import numpy as np
 import itertools
 import decimal
 decimal.getcontext().prec = 100
-import pyphenom_physical_constants as ppc
+from . import pyphenom_physical_constants as ppc
 
 class Atom(object):
     '''

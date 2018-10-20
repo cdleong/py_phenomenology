@@ -3,8 +3,11 @@ Created on Sep 25, 2018
 
 @author: cdleong
 '''
-import solid_angles
 import math
+import sys
+from os import path
+sys.path.append( path.dirname( path.dirname( path.abspath(__file__) ) ) )
+from pyphenom import solid_angles
 
 def vi_1_a():
     angles = [5, 10, 20, 50, 100, 180]
