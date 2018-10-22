@@ -132,7 +132,7 @@ def c_iii_1():
     sums_of_ppms = []
     dict_of_lists_of_percents_for_each_gas = {}
     one_million = 1000000
-    for index, row in sa.atmo_df.iterrows():
+    for _, row in sa.atmo_df.iterrows():
         
         alt_km = row["ALT"]
         density_inv_cubic_cm = row["DENSITY"]
