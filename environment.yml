@@ -86,5 +86,4 @@ dependencies:
   - xlrd=1.1.0=py36_1
   - xz=5.2.4=h2fa13f4_4
   - zlib=1.2.11=h8395fce_2
-prefix: D:\ProgramData\Anaconda3\envs\py_phenom_env
 
