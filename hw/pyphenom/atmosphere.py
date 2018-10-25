@@ -5,13 +5,16 @@ Created on Oct 8, 2018
 '''
 import pandas as pd #also need xlrd
 import math
-import pyphenom_physical_constants
+import os
+from pyphenom import pyphenom_physical_constants
 
 APPROXIMATE_MEAN_MOLECULAR_MASS_OF_EARTH_ATMOSPHERE_KG = 4.79*10**-26
 
+dirname = os.path.dirname(__file__)
+
 class Atmosphere(object):
     standard_atmo_gas_names = "N2    O2    H2O    CO2    O3    N2O    CO    CH4    NO    SO2    NO2    NH3    HNO3    OH    HF    HCL    HBR    HI    CLO    OCS    H2CO    HOCL    HCN    CH3CL    H2O2    C2H2    C2H6    PH3".split()
-    def __init__(self, file_path="../data/Atmosphere Model.xls"):
+    def __init__(self, file_path=dirname+"/../../data/Atmosphere Model.xls"):
         self.file_path = file_path
         self.atmo_df = self.load_standard_atmo()
         self.molecular_mass_df = self.load_molecular_mass() 
