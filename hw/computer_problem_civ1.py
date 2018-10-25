@@ -3,21 +3,22 @@ Created on Oct 20, 2018
 
 @author: cdleong
 '''
+import os
 import geopandas
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
-import colorline
+from pyphenom import colorline
 
 
 
 from shapely.geometry import Point
 from shapely.geometry import shape
 
+dirname = os.path.dirname(__file__)
 
-
-def load_data(file_path="../data/Formatted Event Data.xls"):
+def load_data(file_path=dirname+"/../data/Formatted Event Data.xls"):
     event_data_df = pd.read_excel(file_path)
     return event_data_df
     
@@ -53,13 +54,7 @@ def plot_lat_and_lon(event_data_df):
     event_data_df['Coordinates'] = event_data_df['Coordinates'].apply(Point)
     gdf = geopandas.GeoDataFrame(event_data_df, geometry='Coordinates')
     
-#     nevada = geopandas.read_file("../data/nevada_administrative.shp")
-    nevada = geopandas.read_file("../data/cb_2017_us_state_5m.shx")
-    
-    nevada = geopandas.read_file("../data/nevada_poi.shx")
-#     nevada = geopandas.read_file("../data/nevada_highway.shx") # too big!
-    nevada = geopandas.read_file("../data/tl_2015_32_cousub.shx")
-    nevada = geopandas.read_file("../data/cb_2017_32_tract_500k.shp")
+    nevada = geopandas.read_file(dirname+"/../data/cb_2017_32_tract_500k.shp")
     
     ax = nevada.plot()
     ax = nevada.plot(color='white', edgecolor='black')

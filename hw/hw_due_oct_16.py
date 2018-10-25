@@ -7,9 +7,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math
 import decimal
-import uniform_aerosol as ua
-import radiometry
-import atmosphere
+from pyphenom import uniform_aerosol as ua
+from pyphenom import radiometry
+from pyphenom import atmosphere
 
 def vertical_path_beers_law_approximation(starting_particle_density_per_cubic_m, effective_cross_section_sq_m, scale_height_m):
     exponent_term = -starting_particle_density_per_cubic_m * effective_cross_section_sq_m * scale_height_m

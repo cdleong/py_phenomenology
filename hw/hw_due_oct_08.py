@@ -3,12 +3,12 @@ Created on Oct 7, 2018
 
 @author: cdleong
 '''
-import radiometry
 import numpy as np
 import math
 import matplotlib.pyplot as plt
-from solid_angles import calculate_area_subtended_by_fov
-import atmosphere
+from pyphenom.solid_angles import calculate_area_subtended_by_fov
+from pyphenom import radiometry
+from pyphenom import atmosphere
 
 def vii_7():
     x_meters = 10.0

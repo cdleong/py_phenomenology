@@ -4,8 +4,8 @@ Created on Oct 9, 2018
 @author: cdleong
 '''
 import matplotlib.pyplot as plt
-import atmosphere
 import numpy as np
+from pyphenom import atmosphere
 
 
 def c_iii_1_a(molecular_densities_per_cubic_cm, altitudes_km):
