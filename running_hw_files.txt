@@ -1,8 +1,0 @@
-Python's Angering Import Nonsense
-
-See https://stackoverflow.com/questions/6323860/sibling-package-imports/27878845#27878845
-
-gist: 
-0. from pyphenom import whatever in hw file
-1. Navigate to top-level dir
-2. python -m hw.hw_file
