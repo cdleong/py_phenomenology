@@ -1,0 +1,11 @@
+name: py_phenom_env
+channels:
+  - conda-forge
+  - defaults
+  - brianjmcguirk
+  - jacksongs
+dependencies:
+  - geopandas
+  - matplotlib
+  - pandas
+  - xlrd
