@@ -39,7 +39,7 @@ def ix_2():
                                     primary_lens_top_point])
 
     primary_lens_rays = plt.Polygon(primary_lens_points, fill=None)
-#    patches.append(primary_lens_rays)
+    patches.append(primary_lens_rays)
 
     for index, patch in enumerate(patches):
         print("{0}:{1}:{2}".format(index, patch, patch.get_xy()))
@@ -61,6 +61,8 @@ def ix_2():
                                theta2=central_angle_degrees/2)
 
     patches.append(primary_lens_wedge)
+    # Except that this overestimates the angle a bit, since the aperture is
+    # calculated from the _projection_ of the mirror.
 
     # https://stackoverflow.com/questions/26935701/ploting-filled-polygons-in-python
     p = PatchCollection(patches,
