@@ -3,11 +3,12 @@
 Created 2018-10-26.
 by cdleong
 """
+import math
 import matplotlib.pyplot as plt
 import numpy as np
 from pyphenom import lens
 from matplotlib.collections import PatchCollection
-from matplotlib.patches import Polygon
+from matplotlib.patches import Wedge
 
 
 def ix_2():
@@ -37,13 +38,30 @@ def ix_2():
                                     primary_lens_base_point,
                                     primary_lens_top_point])
 
-    primary_lens_rays = Polygon(primary_lens_points, fill=None)
-    patches.append(primary_lens_rays)
+    primary_lens_rays = plt.Polygon(primary_lens_points, fill=None)
+#    patches.append(primary_lens_rays)
 
     for index, patch in enumerate(patches):
         print("{0}:{1}:{2}".format(index, patch, patch.get_xy()))
 
-    #    plt.gca().add_patch(patch)
+    # ... and the more complicated way is with a Wedge
+    # http://www.1728.org/radians.htm
+    # https://mathbitsnotebook.com/Geometry/Circles/CRArcLengthRadian.html
+    # Calculate central angle with
+    # arc length/circumference = central_angle/360 degrees
+    # -> central_angle_degrees = arc length/circumference*360
+    # arc length is approximately the diameter of the mirror
+    # central angle is solved for.
+    circumference_m = 2*math.pi*primary_lens_focal_length_m
+    arc_length_m = primary_lens_diameter_m
+    central_angle_degrees = arc_length_m/circumference_m*360
+    primary_lens_wedge = Wedge(primary_lens_focus_point,
+                               r=primary_lens_focal_length_m,
+                               theta1=-central_angle_degrees/2,
+                               theta2=central_angle_degrees/2)
+
+    patches.append(primary_lens_wedge)
+
     # https://stackoverflow.com/questions/26935701/ploting-filled-polygons-in-python
     p = PatchCollection(patches,
                         cmap=plt.get_cmap('plasma'),
@@ -52,8 +70,6 @@ def ix_2():
     p.set_array(np.array(colors))
     ax.add_collection(p)
     ax.autoscale(True)
-#    ax.set_xlim([0,10])
-#    ax.set_ylim([0,10])
 
 
 if __name__ == "__main__":
