@@ -71,6 +71,10 @@ def ix_2():
     colors = 100*np.random.rand(len(patches))
     p.set_array(np.array(colors))
     ax.add_collection(p)
+
+    markers = [0, primary_lens_diameter_m]
+    for marker in markers:
+        plt.axhline(y=marker, color='r', linestyle='--')
     ax.autoscale(True)
 
 
