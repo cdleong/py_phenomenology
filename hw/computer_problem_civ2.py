@@ -9,7 +9,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.interpolate import interp1d
 from mpl_toolkits.mplot3d import Axes3D
-
+import geopy
+import math
+from geopy import distance
 
 dirname = os.path.dirname(__file__)
 
@@ -25,14 +27,24 @@ def load_data(event_data_file=dirname+"/../data/Formatted Event Data.xls",
 
 def plot_df_altitude_vs_time(times_sec, altitudes_km, title="Altitude vs Time"):
     """Plot raw data from file."""
-    keys = altitude_data_df.keys()
-    print(keys)
     plt.figure()
 #    plt.plot(times_sec, altitudes_km)
     plt.scatter(times_sec, altitudes_km)
     plt.title(title)
     plt.xlabel("Time after 'launch' (sec)")
     plt.ylabel("altitude (km)")
+
+
+def plot_lla_three_d(xs, ys, zs, title="Lat/Lon/Altitude"):
+    """Plot in 3d! Awesome."""
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    #ax.scatter(xs, ys, zs, c='r')
+    ax.plot(xs, ys, zs, c='r')
+    plt.title(title)
+    ax.set_xlabel('Lat (deg)')
+    ax.set_ylabel('Lon (deg)')
+    ax.set_zlabel('Alt (km)')
 
 
 if __name__ == "__main__":
@@ -70,25 +82,60 @@ if __name__ == "__main__":
                                 how = 'outer',
                                 left_on = 'TIME',
                                 right_on = 'time')
-#    print(merged_df)
 
     pandas_interpolated_altitudes_km = merged_df["altitude"].interpolate("quadratic")
     plot_df_altitude_vs_time(times_sec=merged_df["TIME"].interpolate("quadratic"),
                              altitudes_km=pandas_interpolated_altitudes_km,
                              title="Pandas-interpolated altitude vs time")
 
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-
+    merged_df['TIME'] = merged_df['TIME'].apply(float)
+    merged_df['LATITUDE'] = merged_df['LATITUDE'].apply(float)
+    merged_df['LONGITUDE'] = merged_df['LONGITUDE'].apply(float)
+    merged_df['altitude'] = merged_df['altitude'].apply(float)
+    ts = merged_df['TIME'].interpolate("quadratic")
     xs = merged_df['LATITUDE'].interpolate("quadratic")
     ys = merged_df['LONGITUDE'].interpolate("quadratic")
-    merged_df['altitude'] = merged_df['altitude'].apply(float)
     zs = merged_df['altitude'].interpolate("quadratic")
-#    zs = zs.fillna(method='ffill')
-    for z in zs:
-        print(z)
-#    print(zs.interpolate("quadratic"))
-    #ax.scatter(xs, ys, zs, c='r')
-    ax.plot(xs, ys, zs, c='r')
+    plot_lla_three_d(xs, ys, zs)
+
+    print("Lat lon alt time")
+    index = 0
+    zipped = zip(xs, ys, zs, ts)
+    N = 10
+    for x, y, z, t in zipped:
+        print("{3}, {0:8.2f}, {1:8.2f}, {2:8.2f}, {4:8.2f}".format(x,y,z,index,t))
+
+
+    moving_average_xs = np.convolve(xs, np.ones((N,))/N, mode='valid')
+    moving_average_ys = np.convolve(ys, np.ones((N,))/N, mode='valid')
+    moving_average_zs = np.convolve(zs, np.ones((N,))/N, mode='valid')
+    plot_lla_three_d(moving_average_xs,
+                     moving_average_ys,
+                     moving_average_zs,
+                     title="LLA plot, but with moving average of each coord")
+
+    start_point = geopy.point.Point(40.001, -119.001, 0.00)
+    zipped = zip(ts, xs, ys, zs)
+    distances_km = []
+    times_for_distances = []
+    for t, x, y, z in zipped:
+        if (not math.isnan(t)
+            and not math.isnan(x)
+            and not math.isnan(y)
+            and not math.isnan(z)):
+            current_point = geopy.point.Point(x, y, z)
+            distance_km = distance.distance(start_point, current_point).km
+            print(f"at time {t} distance is {distance_km} km")
+            times_for_distances.append(t)
+            distances_km.append(distance_km)
+
+
+    plt.figure()
+#    plt.plot(times_sec, altitudes_km)
+    plt.scatter(times_for_distances, distances_km)
+    plt.title("3d distance vs time")
+    plt.xlabel("Time after 'launch' (sec)")
+    plt.ylabel("3d distance (km)")
+
 
     plt.show()
