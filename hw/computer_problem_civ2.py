@@ -8,7 +8,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.interpolate import interp1d
-
+from mpl_toolkits.mplot3d import Axes3D
 
 
 dirname = os.path.dirname(__file__)
@@ -70,11 +70,25 @@ if __name__ == "__main__":
                                 how = 'outer',
                                 left_on = 'TIME',
                                 right_on = 'time')
-    print(merged_df)
+#    print(merged_df)
 
-    pandas_interpolated_altitudes_km = merged_df["altitude"].interpolate()
-    plot_df_altitude_vs_time(times_sec=merged_df["TIME"].interpolate(),
+    pandas_interpolated_altitudes_km = merged_df["altitude"].interpolate("quadratic")
+    plot_df_altitude_vs_time(times_sec=merged_df["TIME"].interpolate("quadratic"),
                              altitudes_km=pandas_interpolated_altitudes_km,
                              title="Pandas-interpolated altitude vs time")
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    xs = merged_df['LATITUDE'].interpolate("quadratic")
+    ys = merged_df['LONGITUDE'].interpolate("quadratic")
+    merged_df['altitude'] = merged_df['altitude'].apply(float)
+    zs = merged_df['altitude'].interpolate("quadratic")
+#    zs = zs.fillna(method='ffill')
+    for z in zs:
+        print(z)
+#    print(zs.interpolate("quadratic"))
+    #ax.scatter(xs, ys, zs, c='r')
+    ax.plot(xs, ys, zs, c='r')
 
     plt.show()
