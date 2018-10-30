@@ -39,9 +39,9 @@ if __name__ == "__main__":
     event_data_df, altitude_data_df = load_data()
 
     units_row = 0
-    print(altitude_data_df)
+#    print(altitude_data_df)
     altitude_data_df = altitude_data_df.drop([units_row])
-    print(altitude_data_df)
+#    print(altitude_data_df)
 
     raw_altitudes_km = altitude_data_df["altitude"]
 
@@ -51,9 +51,9 @@ if __name__ == "__main__":
                              altitudes_km=raw_altitudes_km)
 
     raw_event_times_sec = event_data_df["TIME"]
-    print(raw_event_times_sec.shape)
-    print(type(raw_event_times_sec))
-    print(raw_altitudes_km.shape)
+#    print(raw_event_times_sec.shape)
+#    print(type(raw_event_times_sec))
+#    print(raw_altitudes_km.shape)
 
     alt_km_interpolator = interp1d(raw_times_sec, raw_altitudes_km)
 
@@ -62,5 +62,19 @@ if __name__ == "__main__":
     plot_df_altitude_vs_time(times_sec=raw_event_times_sec_greater_than_zero,
                              altitudes_km=linear_interpolated_altitudes_km,
                              title="Linear interpolated altitude vs time")
+
+    # convert to float64
+    altitude_data_df['time'] = altitude_data_df['time'].apply(float)
+    merged_df = pd.merge_ordered(event_data_df,
+                                altitude_data_df,
+                                how = 'outer',
+                                left_on = 'TIME',
+                                right_on = 'time')
+    print(merged_df)
+
+    pandas_interpolated_altitudes_km = merged_df["altitude"].interpolate()
+    plot_df_altitude_vs_time(times_sec=merged_df["TIME"].interpolate(),
+                             altitudes_km=pandas_interpolated_altitudes_km,
+                             title="Pandas-interpolated altitude vs time")
 
     plt.show()
