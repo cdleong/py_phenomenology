@@ -16,13 +16,41 @@ def ix_2():
 
     LSST Telescope has 3 mirrors!
     """
+    # --------------------------------------------------------------------
+    # --------------------- SETUP MIRRORS --------------------------------
+    # --------------------------------------------------------------------
+    # instantiate Primary mirror TODO: rename "Lens" object to "Optical
+    # Element" or something. They're mathematically the same though.
     primary_lens_focal_length_m = 10
     primary_lens_focal_length_cm = primary_lens_focal_length_m*100
     primary_lens_diameter_m = 8.4
     primary_lens_diameter_cm = primary_lens_diameter_m*100
+
     primary_lens = lens.Lens(focal_length_cm=primary_lens_focal_length_cm)
     primary_lens.set_aperture_from_diameter(diameter_cm=primary_lens_diameter_cm)
 
+    # instantiate secondary mirror
+    secondary_mirror_focal_length_m = -3.4  # hey that matches secondary_mirror_object_distance_cm
+    secondary_mirror_focal_length_cm = secondary_mirror_focal_length_m*100  # hey that matches secondary_mirror_object_distance_cm
+    secondary_mirror_diameter_m = 3.4
+    secondary_mirror_diameter_cm = secondary_mirror_diameter_m * 100
+
+    secondary_mirror = lens.Lens(focal_length_cm=secondary_mirror_focal_length_cm)
+    secondary_mirror.set_aperture_from_diameter(diameter_cm=secondary_mirror_diameter_cm)
+
+    # tertiary mirror
+    tertiary_mirror_focal_length_m = 4.2
+    tertiary_mirror_focal_length_cm = tertiary_mirror_focal_length_m*100
+    tertiary_mirror_diameter_m = 5.0
+    tertiary_mirror_diameter_cm = tertiary_mirror_diameter_m * 100
+
+    tertiary_mirror = lens.Lens(focal_length_cm=tertiary_mirror_focal_length_cm)
+    tertiary_mirror.set_aperture_from_diameter(diameter_cm=tertiary_mirror_diameter_cm)
+
+
+    # --------------------------------------------------------------------
+    # --------------------- GRAPHING STUFF -------------------------------
+    # --------------------------------------------------------------------
     # I want to graph the rays.
     # Simplest method is with a triangle
     fig, ax = plt.subplots()
@@ -77,6 +105,48 @@ def ix_2():
         plt.axhline(y=marker, color='r', linestyle='--')
     ax.autoscale(True)
 
+
+    # --------------------------------------------------------------------
+    # -------------------- PRIMARY MIRROR CALCULATIONS -------------------
+    # --------------------------------------------------------------------
+    basically_infinity_m = 10**10
+    basically_infinity_cm = basically_infinity_m * 100
+    primary_lens_image_distance_cm = primary_lens.find_image_distance_cm(object_distance_cm=basically_infinity_cm)
+    print(f"primary_lens_image_distance_cm: {primary_lens_image_distance_cm}")
+
+    # --------------------------------------------------------------------
+    # -------------------- SECONDARY MIRROR CALCULATIONS -----------------
+    # --------------------------------------------------------------------
+    distance_from_primary_to_secondary_m = 6.2
+    distance_from_primary_to_secondary_cm = distance_from_primary_to_secondary_m*100
+    print(f"distance_from_primary_to_secondary_cm: {distance_from_primary_to_secondary_cm}")
+
+    # object distance with respect to convex secondary mirror is negative.
+    secondary_mirror_object_distance_cm = -(primary_lens_image_distance_cm
+                                            - distance_from_primary_to_secondary_cm)
+    print(f"secondary_mirror_object_distance_cm: {secondary_mirror_object_distance_cm}")
+
+
+    secondary_mirror_image_distance_cm = secondary_mirror.find_image_distance_cm(object_distance_cm=secondary_mirror_object_distance_cm)
+    print(f"secondary_mirror_image_distance_cm: {secondary_mirror_image_distance_cm}")
+
+    # --------------------------------------------------------------------
+    # -------------------- TERTIARY MIRROR CALCULATIONS ----i-------------
+    # --------------------------------------------------------------------
+    distance_from_secondary_to_tertiary_m = 6.5
+    distance_from_secondary_to_tertiary_cm = distance_from_secondary_to_tertiary_m*100
+    print(f"distance_from_secondary_to_tertiary_cm: {distance_from_secondary_to_tertiary_cm}")
+
+    tertiary_mirror_object_distance_cm = distance_from_secondary_to_tertiary_cm - secondary_mirror_image_distance_cm
+    print(f"tertiary_mirror_object_distance_cm: {tertiary_mirror_object_distance_cm}")
+
+    tertiary_mirror_image_distance_cm = tertiary_mirror.find_image_distance_cm(object_distance_cm=tertiary_mirror_object_distance_cm)
+    print(f"tertiary_mirror_image_distance_cm: {tertiary_mirror_image_distance_cm}")
+
+    total_focal_length = (distance_from_primary_to_secondary_cm
+                          + distance_from_secondary_to_tertiary_cm
+                          + tertiary_mirror_image_distance_cm)
+    print(f"total_focal_length: {total_focal_length}")
 
 if __name__ == "__main__":
     ix_2()
