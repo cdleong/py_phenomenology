@@ -8,10 +8,10 @@ def calculate_watts_per_photon(wavelength_um):
     return float(watts_per_photon)
 
 
-def calculate_number_of_photons(wavelength_um, num_watts=1):
+def calculate_number_of_photons_per_second(wavelength_um, num_watts=1):
     watts_per_photon = calculate_watts_per_photon(wavelength_um)
-    total_photons = num_watts/watts_per_photon
-    return total_photons
+    total_photons_per_sec = num_watts/watts_per_photon
+    return total_photons_per_sec
 
 
 def calculate_watts(wavelength_um, total_photons):
@@ -26,7 +26,7 @@ if __name__ == "__main__":
     total_photons = 50*10e6
     total_watts = calculate_watts(wavelength_um, total_photons)
 
-    total_photons_backcalculated = calculate_number_of_photons(wavelength_um, total_watts)
+    total_photons_backcalculated = calculate_number_of_photons_per_second(wavelength_um, total_watts)
 
     print(f"total watts (should equal about 1.9e-11 watts): {total_watts}")
     print(f"total photons (should equal ~{total_photons}: {total_photons_backcalculated}")
