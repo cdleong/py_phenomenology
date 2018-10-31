@@ -39,7 +39,7 @@ def plot_lla_three_d(xs, ys, zs, title="Lat/Lon/Altitude"):
     """Plot in 3d! Awesome."""
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
-    #ax.scatter(xs, ys, zs, c='r')
+#    ax.scatter(xs, ys, zs, c='r')
     ax.plot(xs, ys, zs, c='r')
     plt.title(title)
     ax.set_xlabel('Lat (deg)')
@@ -78,10 +78,10 @@ if __name__ == "__main__":
     # convert to float64
     altitude_data_df['time'] = altitude_data_df['time'].apply(float)
     merged_df = pd.merge_ordered(event_data_df,
-                                altitude_data_df,
-                                how = 'outer',
-                                left_on = 'TIME',
-                                right_on = 'time')
+                                 altitude_data_df,
+                                 how='outer',
+                                 left_on='TIME',
+                                 right_on='time')
 
     pandas_interpolated_altitudes_km = merged_df["altitude"].interpolate("quadratic")
     plot_df_altitude_vs_time(times_sec=merged_df["TIME"].interpolate("quadratic"),
@@ -103,9 +103,9 @@ if __name__ == "__main__":
     zipped = zip(xs, ys, zs, ts)
     N = 10
     for x, y, z, t in zipped:
-        print("{3}, {0:8.2f}, {1:8.2f}, {2:8.2f}, {4:8.2f}".format(x,y,z,index,t))
+        print("{3}, {0:8.2f}, {1:8.2f}, {2:8.2f}, {4:8.2f}".format(x, y, z, index, t))
 
-
+    # Calculate moving average
     moving_average_xs = np.convolve(xs, np.ones((N,))/N, mode='valid')
     moving_average_ys = np.convolve(ys, np.ones((N,))/N, mode='valid')
     moving_average_zs = np.convolve(zs, np.ones((N,))/N, mode='valid')
@@ -120,15 +120,14 @@ if __name__ == "__main__":
     times_for_distances = []
     for t, x, y, z in zipped:
         if (not math.isnan(t)
-            and not math.isnan(x)
-            and not math.isnan(y)
-            and not math.isnan(z)):
+                and not math.isnan(x)
+                and not math.isnan(y)
+                and not math.isnan(z)):
             current_point = geopy.point.Point(x, y, z)
             distance_km = distance.distance(start_point, current_point).km
             print(f"at time {t} distance is {distance_km} km")
             times_for_distances.append(t)
             distances_km.append(distance_km)
-
 
     plt.figure()
 #    plt.plot(times_sec, altitudes_km)
@@ -137,5 +136,18 @@ if __name__ == "__main__":
     plt.xlabel("Time after 'launch' (sec)")
     plt.ylabel("3d distance (km)")
 
+    # velocities?
+    velocities = np.gradient(distances_km)
+    avg_velocity = np.mean(velocities)
+    avg_velocity_of_end = np.mean(velocities[-10:])
+
+    print(f"avg velocity: {avg_velocity}")
+    print(f"avg velocity towards the end: {avg_velocity_of_end}")
+
+    plt.figure()
+    plt.scatter(times_for_distances, velocities)
+    plt.title("velocity vs time")
+    plt.xlabel("Time after 'launch' (sec)")
+    plt.ylabel("velocity, km/s")
 
     plt.show()
