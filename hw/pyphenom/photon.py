@@ -1,4 +1,4 @@
-import pyphenom_physical_constants as ppc
+from pyphenom import pyphenom_physical_constants as ppc
 import decimal
 
 
