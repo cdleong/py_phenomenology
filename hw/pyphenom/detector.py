@@ -5,7 +5,7 @@ Code for dealing with photodetectors
 """
 
 
-class detector(object):
+class Detector(object):
     """It's a detector.
 
     It knows or can calculate things like:
@@ -30,4 +30,17 @@ class detector(object):
 
     def calculate_duty_cycle(self):
         """Calculate duty cycle."""
-        return self.integration_time_seconds/self.sample_rate_times_per_second
+        time_betwixt_samples_sec = 1/self.sample_rate_times_per_second
+        return self.integration_time_seconds/time_betwixt_samples_sec
+
+
+if __name__ == "__main__":
+    first_detector_from_slide_20_199 = Detector(sample_rate_times_per_second=44.1*10**3,
+                                                integration_time_seconds=1*10**-6)
+    first_duty_cycle = first_detector_from_slide_20_199.calculate_duty_cycle()
+    print(f"duty cycle (should be <0.045): {first_duty_cycle}")
+
+    second_detector = Detector(sample_rate_times_per_second=30,
+                               integration_time_seconds=20*10**-3)
+    second_duty_cycle = second_detector.calculate_duty_cycle()
+    print(f"duty cycle (should be ~0.6): {second_duty_cycle}")
