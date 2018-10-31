@@ -49,16 +49,26 @@ def x_9():
     blackbody_calculator = graybody_emissivity.GraybodyEmissivityCalculator()
     start_wavelength_um = 2.0
     stop_wavelength_um = 3.5
+
+    # uncomment to see the shape of the curve
+#    start_wavelength_um = 0.1
+#    stop_wavelength_um = 10.0
     wavelength_step_um = 0.01
     temp_kelvin = 350
     wavelengths, blackbody_exitances, graybody_exitances = blackbody_calculator.get_blackbody_and_graybody_exitances(start_wavelength_um, stop_wavelength_um, wavelength_step_um, temp_kelvin)
     graybody_emissivity.graph_exitance_vs_wavelength_at_temp(wavelengths, blackbody_exitances, temp_kelvin)
+    graybody_emissivity.graph_exitance_vs_wavelength_at_temp(wavelengths, blackbody_exitances, temp_kelvin, loglog=False)
 
     # instantiate a lens
+    # calculate number of photons per wavelength hitting aperture per sec,
+    # per unit bandpass
+    # assume they all get routed to detector.
 
     # instantiate a detector
-
-    # calculate number of photons per wavelength hitting detector
+    # figure out sample length in seconds
+    # using responsivity curve, estimate electrons out per unit bandpass
+    # answer is sample length * photons per second * responsivity
+    # integrated over wavelength
 
 #    print(f"{x_9_string}:{}")
 
@@ -66,6 +76,8 @@ def x_9():
 def x_10():
     problem_string = "[Problem X-10]"
     print(f"{problem_string} unfinished")
+
+    # same as x_9, but use an extended source with 350K temp
 
 
 if __name__ == "__main__":
