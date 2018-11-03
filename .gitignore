@@ -106,3 +106,6 @@ venv.bak/
 
 # don't check in data I didn't make!
 data/
+
+# vim swp files? Not today!
+*.swp
