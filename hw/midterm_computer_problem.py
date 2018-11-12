@@ -6,6 +6,7 @@ by cdleong
 import random
 
 from pyphenom import atmosphere
+from pyphenom import photon
 
 
 def setup_fpa():
@@ -28,8 +29,16 @@ def setup_telescope(optical_transmission_factor, aperture_diameter_cm):
 
 
 def calculate_photons_leaving_source():
+
+    # How much of the laser is there?
     laser_output_in_bandpass_watts = 10
 
+    laser_wavelength_um = 1.064
+
+    laser_output_in_photons_per_second = photon.calculate_number_of_photons_per_second(laser_wavelength_um, laser_output_in_bandpass_watts)
+    print("laser output in photons per second {}".format(laser_output_in_photons_per_second))
+
+    # How far does the beam travel?
     number_of_horizontal_sections = 10
     length_of_horizontal_sections_m = 10
 
@@ -37,8 +46,9 @@ def calculate_photons_leaving_source():
     length_of_vertical_sections_m = 0.5
     path_length_of_laser_m = ((number_of_horizontal_sections*length_of_horizontal_sections_m)
                               + (number_of_vertical_sections*length_of_vertical_sections_m))
-    pass
 
+    # calculate the atmospheric transmission factor
+    standard_atmo = atmosphere.Atmosphere()
 
 def setup_spatial_info():
     spatial_info = {}
@@ -67,7 +77,6 @@ if __name__ == "__main__":
 
     # Scattering
 
-    telescope = setup_telescope()
 
     photons_leaving_source = calculate_photons_leaving_source()
 
@@ -75,6 +84,9 @@ if __name__ == "__main__":
 
     atmosphere = setup_atmosphere()
 
+    optical_transmission_factor = 0.9
+    aperture_diameter_cm = 10.0
+    telescope = setup_telescope(optical_transmission_factor, aperture_diameter_cm)
     photons_hitting_telescope_aperture_per_sec = calculate_photons_hitting_telescope_aperture_per_sec(photons_leaving_source,
                                                                                                       spatial_info,
                                                                                                       atmosphere)

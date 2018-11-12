@@ -50,6 +50,8 @@ class Atmosphere(object):
 #         print(standard_atmo_df)
         return standard_atmo_df
 
+def calculate_atmospheric_transmission_factor(path, atmosphere):
+    pass
 
 def hydrostatic_molecular_density_at_altitude_per_cubic_meter(altitude_meters,
                                                               scale_height=None):
