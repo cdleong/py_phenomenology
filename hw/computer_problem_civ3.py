@@ -187,7 +187,7 @@ def find_best_args_for_atf_function(atmo_trans_df):
         return sigma, scale_height_km
 
 
-def calculate_vert_and_angle_transmission_for_rocket_heights(event_data_df,
+def update_event_alt_and_transmission_factor(event_data_df,
                                                              alt_ffit,
                                                              sigma,
                                                              scale_height_km):
@@ -238,7 +238,56 @@ def calculate_vert_and_angle_transmission_for_rocket_heights(event_data_df,
     event_data_df["VERT_ATF"] = estimated_vertical_transmissions
     event_data_df["ANGLE_ATF"] = estimated_angle_transmissions
 
+
+def correct_event_intensities(event_data_df):
+
+    apparent_intensities = event_data_df["INTENSITY"]
+    atmospheric_transmission_factors = event_data_df["ANGLE_ATF"]
+
+    actual_intensities = []
+    for apparent_intensity, atmospheric_transmission_factor in zip(apparent_intensities, atmospheric_transmission_factors):
+        # apparent = actual * atf
+        # therefore, actual = apparent/atf
+        actual_intensity = apparent_intensity/atmospheric_transmission_factor
+        actual_intensities.append(actual_intensity)
+
+    event_data_df["ACTUAL_INTENSITY"]=actual_intensities
+
     print(event_data_df)
+
+    plt.figure("Apparent VS Actual Intensity vs Altitude")
+    plt.title("Apparent VS Actual Intensity vs Altitude")
+    plt.ylabel("altitude (km)")
+    plt.xlabel("intensity (Not sure... megalumens?)")
+    plt.plot(apparent_intensities,
+             event_data_df["EST_ALT"],
+             label="Apparent",
+             color='r')
+
+    plt.plot(actual_intensities,
+             event_data_df["EST_ALT"],
+             label="Actual",
+             color='g')
+
+    plt.legend()
+
+
+    plt.figure("Apparent VS Actual Intensity vs Time")
+    plt.title("Apparent VS Actual Intensity vs Time")
+    plt.xlabel("time (sec)")
+    plt.ylabel("intensity (Not sure... megalumens?)")
+    plt.plot(event_data_df["TIME"],
+             apparent_intensities,
+             label="Apparent",
+             color='r')
+
+    plt.plot(event_data_df["TIME"],
+             actual_intensities,
+             label="Actual",
+             color='g')
+
+    plt.legend()
+
 
 
 if __name__ == "__main__":
@@ -250,5 +299,9 @@ if __name__ == "__main__":
 
     alt_ffit = find_best_fit_for_altitude(altitude_data_df)
     sigma, scale_height_km = find_best_args_for_atf_function(atmo_trans_df)
-    calculate_vert_and_angle_transmission_for_rocket_heights(event_data_df, alt_ffit, sigma, scale_height_km)
+    update_event_alt_and_transmission_factor(event_data_df, alt_ffit, sigma, scale_height_km)
+
+    print(event_data_df)
+
+    correct_event_intensities(event_data_df)
     plt.show()
