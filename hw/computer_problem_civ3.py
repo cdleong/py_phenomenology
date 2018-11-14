@@ -6,6 +6,7 @@
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
+import math
 import numpy as np
 import numpy.polynomial.polynomial as poly
 import seaborn as sns
@@ -105,6 +106,9 @@ def find_best_fit_for_altitude(altitude_data_df, deg=10):
 
 def find_best_args_for_atf_function(atmo_trans_df):
 
+    sigma, scale_height_km = 5.994842503189421e-30, 5.828282828282829  # results from calculations below
+    return sigma, scale_height_km
+
     x = atmo_trans_df["ALTITUDE"]
     actual_transmission = atmo_trans_df["TRANSMISSION"]
 
@@ -131,7 +135,7 @@ def find_best_args_for_atf_function(atmo_trans_df):
     really_low = -1  # 10^-1 is 0.1 km
     really_high = 4  # 10^4 is 10000 km
 
-    #updated guess, since our last value was around 5.7
+    # updated guess, since our last value was around 5.7
     really_low = -1
     really_high = 1
     possible_scale_heights_km = np.logspace(really_low, really_high, number_of_values_to_try)
@@ -154,7 +158,6 @@ def find_best_args_for_atf_function(atmo_trans_df):
             results_tuple = (mse, sigma, scale_height_km)
             results.append(results_tuple)
 
-
     lowest_mse = 10e10000
     lowest_result = None
     for result in results:
@@ -162,7 +165,6 @@ def find_best_args_for_atf_function(atmo_trans_df):
         if mse < lowest_mse:
             lowest_result = result
             lowest_mse = mse
-
 
     if lowest_result:
         print("BEST")
@@ -183,11 +185,55 @@ def find_best_args_for_atf_function(atmo_trans_df):
         plt.xlabel("transmission factor")
         plt.ylabel("altitude(km)")
 
-
         return sigma, scale_height_km
 
 
-def calculate_vert_transmission_for_rocker_heights()
+def calculate_vert_and_angle_transmission_for_rocket_heights(event_data_df,
+                                                             alt_ffit,
+                                                             sigma,
+                                                             scale_height_km):
+    # What's secant of 45 degrees?
+    angle_degrees = 45
+    angle_rad = math.radians(angle_degrees)
+    secant_of_angle = 1 / math.cos(angle_rad)
+    print("secant is: {}".format(secant_of_angle))
+
+    estimated_alts_km = []
+    estimated_vertical_transmissions = []
+    estimated_angle_transmissions = []
+    for time in event_data_df["TIME"]:
+        estimated_alt_km = alt_ffit(time)
+        estimated_alt_km = max(estimated_alt_km, 0)  # can't be less than zero
+        estimated_vertical_transmission = atmosphere.calculate_atmospheric_transmission_factor_to_space(estimated_alt_km, sigma, scale_height_km)
+        print("at time={0} seconds: \n\testimated altitude is {1} km \n\testimated vertical transmission is: {2}".format(time, estimated_alt_km, estimated_vertical_transmission))
+
+        # angle transmission
+        estimated_angle_transmission = estimated_vertical_transmission**secant_of_angle
+
+        estimated_alts_km.append(estimated_alt_km)
+        estimated_vertical_transmissions.append(estimated_vertical_transmission)
+        estimated_angle_transmissions.append(estimated_angle_transmission)
+
+    plt.figure()
+    plt.title("Atmospheric Transition to Space vs time")
+    plt.xlabel("time (sec)")
+    plt.ylabel("Atmospheric transmission factor")
+    plt.plot(event_data_df["TIME"], estimated_vertical_transmissions, label="Vertical")
+    plt.plot(event_data_df["TIME"], estimated_angle_transmissions, label="Angle={} degrees".format(angle_degrees))
+    plt.legend()
+
+    #plt.figure()
+    #plt.title("Angle Atmospheric Transition to Space vs time")
+    #plt.xlabel("time (sec)")
+    #plt.ylabel("angle transmission factor")
+    #plt.plot(event_data_df["TIME"], estimated_angle_transmissions)
+
+    event_data_df["EST_ALT"] = estimated_alts_km
+    event_data_df["VERT_ATF"] = estimated_vertical_transmissions
+    event_data_df["ANGLE_ATF"] = estimated_angle_transmissions
+
+    print(event_data_df)
+
 
 if __name__ == "__main__":
     event_data_df, altitude_data_df, atmo_trans_df = load_data()
@@ -197,5 +243,6 @@ if __name__ == "__main__":
     atmo_ffit = find_best_fit_for_atmo_transmission(atmo_trans_df)
 
     alt_ffit = find_best_fit_for_altitude(altitude_data_df)
-    find_best_args_for_atf_function(atmo_trans_df)
+    sigma, scale_height_km = find_best_args_for_atf_function(atmo_trans_df)
+    calculate_vert_and_angle_transmission_for_rocket_heights(event_data_df, alt_ffit, sigma, scale_height_km)
     plt.show()
