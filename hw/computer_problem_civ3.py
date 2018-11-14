@@ -109,7 +109,6 @@ def find_best_args_for_atf_function(atmo_trans_df):
     sigma, scale_height_km = 5.994842503189421e-30, 5.828282828282829  # results from calculations below
     return sigma, scale_height_km
 
-    x = atmo_trans_df["ALTITUDE"]
     actual_transmission = atmo_trans_df["TRANSMISSION"]
 
     # we have a value that's really low
@@ -214,13 +213,20 @@ def calculate_vert_and_angle_transmission_for_rocket_heights(event_data_df,
         estimated_vertical_transmissions.append(estimated_vertical_transmission)
         estimated_angle_transmissions.append(estimated_angle_transmission)
 
-    plt.figure()
-    plt.title("Atmospheric Transition to Space vs time")
+    fig, ax1 = plt.subplots()
+    plt.title("Atmospheric Transition to Space, Altitude vs time")
     plt.xlabel("time (sec)")
-    plt.ylabel("Atmospheric transmission factor")
-    plt.plot(event_data_df["TIME"], estimated_vertical_transmissions, label="Vertical")
-    plt.plot(event_data_df["TIME"], estimated_angle_transmissions, label="Angle={} degrees".format(angle_degrees))
-    plt.legend()
+
+
+    ax1.set_ylabel("Atmospheric transmission factor")
+    ax1.plot(event_data_df["TIME"], estimated_vertical_transmissions, label="Vertical")
+    ax1.plot(event_data_df["TIME"], estimated_angle_transmissions, label="Angle={} degrees".format(angle_degrees))
+
+    ax2 = ax1.twinx()
+    ax2.set_ylabel("Altitude (km)")
+    ax2.plot(event_data_df["TIME"], estimated_alts_km, label="Altitude", color="r")
+
+    fig.legend()
 
     #plt.figure()
     #plt.title("Angle Atmospheric Transition to Space vs time")
