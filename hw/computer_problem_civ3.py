@@ -83,7 +83,7 @@ def graph_alt_vs_time(time_sec, alt_km, title):
     plt.figure()
     plt.title(title)
     plt.plot(time_sec, alt_km)
-    plt.xlabel("Transmission factor")
+    plt.xlabel("Time (sec)")
     plt.ylabel("Altitude(km)")
 
 
