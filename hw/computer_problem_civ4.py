@@ -52,7 +52,23 @@ def load_data(final_problem_data_file=dirname + "/../data/Final Problem.xls",
     return qe_df, tau_df, atmo_trans_df
 
 
+def load_params():
+    params = {}
+    params["R_km"] = 3.00* 10**4
+    print(params)
+    return params
+
+def calculate_background_radiation():
+    radiation_from_sun = calculate_radiation_from_sun()
+    radiation_from_dirt = calculate_radiation_from_dirt()
+    pass
+
 if __name__ == "__main__":
     qe_df, tau_df, atmo_trans_df = load_data()
+
+    params = load_params()
+
+    calculate_background_radiation()
+
 
     plt.show()
