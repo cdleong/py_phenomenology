@@ -58,10 +58,10 @@ class UniformAerosol(object):
             sigma_over_area = old_sigma_over_area * new_sigma_over_old_sigma
 
         print(f"sigma over area is: {sigma_over_area}")
-        print(f"particle area is: {self.particle_area}")
-        sigma_um = sigma_over_area * self.particle_area
+        print(f"particle area is: {self.particle_area} um^2")
+        sigma_sq_um = sigma_over_area * self.particle_area
 
-        return sigma_um
+        return sigma_sq_um
 
     def calculate_transmission_factor(self, wavelength_um, path_length_m):
         """
